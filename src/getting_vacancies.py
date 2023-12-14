@@ -35,10 +35,17 @@ class VacancyManager(ABC):
 
     @abstractmethod
     def _save_vacancies(self):
+        """ Запись данных в файл """
         pass
 
     @abstractmethod
     def delete_vacancies(self, user_id):
+        """ Удаление данных из файла по id """
+        pass
+
+    @abstractmethod
+    def __add__(self, other):
+        """ Добавление вакансий по одной """
         pass
 
 
@@ -128,15 +135,23 @@ class ReadWriteFile(VacancyManager):
         self.data = data
 
     def _save_vacancies(self) -> None:
+        """ Запись списка вакансий в файл json """
         with open('Vacancies_for_you.json', 'w', encoding='utf-8') as file:
             json.dump(self.data, file, ensure_ascii=False, indent=2)
 
     def delete_vacancies(self, user_id: str) -> None:
+        """ Удаление вакансии по id """
         obj = json.load(open("Vacancies_for_you.json"))
         for elem in range(len(obj)):
             if obj[elem]["id"] == user_id:
                 obj.pop(elem)
                 break
+
+    def __add__(self, other: dict) -> None:
+        """ Добавление вакансии к списку в файле json """
+        with open('Vacancies_for_you.json', 'a', encoding='utf-8') as file:
+            json.dump(other, file, ensure_ascii=False, indent=2)
+
 
 # api = HeadHunterAPI('няня', 'publication_time', 50000, 1)
 # new_class = ReadWriteFile(api.load_vacancy())
