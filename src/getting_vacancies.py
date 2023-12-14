@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 import requests
 load_dotenv()
 
+
 class VacancyAPI(ABC):
     """ абстрактный класс для работы с API сайтов с вакансиями """
 
@@ -27,6 +28,18 @@ class VakancyParams:
     def __repr__(self):
         """ Вывод введенной вакансии """
         return f'{self.vakancy_name}'
+
+
+class VacancyManager(ABC):
+    """ абстрактный класс для работы с полученными вакансиями """
+
+    @abstractmethod
+    def _save_vacancies(self):
+        pass
+
+    @abstractmethod
+    def delete_vacancies(self, user_id):
+        pass
 
 
 class SuperJobAPI(VakancyParams, VacancyAPI):
@@ -109,16 +122,23 @@ class HeadHunterAPI(VakancyParams, VacancyAPI):
         return vacancies_in_HH
 
 
-class WriteToFile:
+class ReadWriteFile(VacancyManager):
+    """ Чтение и записб вакансий в json-файл """
     def __init__(self, data: list) -> None:
         self.data = data
 
-    def write_to_file(self) -> None:
-        with open('Vacancies_for_you', 'w', encoding='utf-8') as file:
+    def _save_vacancies(self) -> None:
+        with open('Vacancies_for_you.json', 'w', encoding='utf-8') as file:
             json.dump(self.data, file, ensure_ascii=False, indent=2)
 
+    def delete_vacancies(self, user_id: str) -> None:
+        obj = json.load(open("Vacancies_for_you.json"))
+        for elem in range(len(obj)):
+            if obj[elem]["id"] == user_id:
+                obj.pop(elem)
+                break
 
-# api = HeadHunterAPI('разработчик', 'publication_time', 50000, 1)
-# new_class = WriteToFile(api.load_vacancy())
-# new_class.write_to_file()
+# api = HeadHunterAPI('няня', 'publication_time', 50000, 1)
+# new_class = ReadWriteFile(api.load_vacancy())
+# new_class._save_vacancies()
 # pprint(api.load_vacancy())
