@@ -1,10 +1,12 @@
 import json
+import os
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any
-import os
-from dotenv import load_dotenv
+
 import requests
+from dotenv import load_dotenv
+
 load_dotenv()
 
 
@@ -12,7 +14,7 @@ class VacancyAPI(ABC):
     """ абстрактный класс для работы с API сайтов с вакансиями """
 
     @abstractmethod
-    def connect_get_vacancies(self):
+    def connect_get_vacancies(self) -> Any:
         pass
 
 
@@ -24,7 +26,7 @@ class VakancyParams:
         self.payment_from = payment_from  # сумма от
         self.no_agreement = no_agreement  # убрать вакансии без указания оклада (1)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """ Вывод введенной вакансии """
         return f'{self.vakancy_name}'
 
@@ -33,17 +35,17 @@ class VacancyManager(ABC):
     """ абстрактный класс для работы с полученными вакансиями """
 
     @abstractmethod
-    def _save_vacancies(self):
+    def _save_vacancies(self) -> None:
         """ Запись данных в файл """
         pass
 
     @abstractmethod
-    def delete_vacancies(self, user_id):
+    def delete_vacancies(self, user_id: str) -> None:
         """ Удаление данных из файла по id """
         pass
 
     @abstractmethod
-    def adding_data(self):
+    def adding_data(self) -> None:
         """ Добавление вакансий в существующий файл """
         pass
 
@@ -55,13 +57,12 @@ class SuperJobAPI(VakancyParams, VacancyAPI):
         """ Инициализация """
         super().__init__(vakancy_name, sorting, payment_from, no_agreement)
         self.headers = {'X-Api-App-Id': os.getenv('API_KEY')}
-        self.url = f'https://api.superjob.ru/2.0/vacancies'
-
+        self.url = 'https://api.superjob.ru/2.0/vacancies'
 
     def connect_get_vacancies(self) -> Any:
         """ Реализация подключения к API Superjob и получение данных в json формате """
         try:
-            response = requests.get(self.url, headers=self.headers,
+            response = requests.get(self.url, headers=self.headers,  # type: ignore
                                     params={'keywords': self.vakancy_name, 'order_field': self.sorting,
                                             'payment_from': self.payment_from,
                                             'no_agreement': self.no_agreement,
@@ -70,8 +71,9 @@ class SuperJobAPI(VakancyParams, VacancyAPI):
         except Exception as e:
             print(f"Ошибка: {e}")
 
-    def load_vacancy(self):
-        """ Цикл по словарюю берем из словаря только нужные нам данные и записываем их в переменную 'vacancies_in_SJ' """
+    def load_vacancy(self) -> list:
+        """ Цикл по словарюю берем из словаря только нужные нам данные и записываем их в переменную 'vacancies_in_SJ'
+        """
         data = self.connect_get_vacancies()
         vacancies_in_SJ = []
         try:
@@ -115,7 +117,7 @@ class HeadHunterAPI(VakancyParams, VacancyAPI):
         except Exception as e:
             print(f"Ошибка: {e}")
 
-    def load_vacancy(self):
+    def load_vacancy(self) -> Any:
         """ Создание списка вакансий с нужными данными """
         data = self.connect_get_vacancies()
         vacancies_in_HH = []
@@ -145,7 +147,7 @@ class ReadWriteFile(VacancyManager):
     def _save_vacancies(self) -> None:
         """ Запись списка вакансий в файл json """
         with open('Vacancies_for_you.json', 'w', encoding='utf-8') as file:
-                json.dump(self.data, file, ensure_ascii=False, indent=2)
+            json.dump(self.data, file, ensure_ascii=False, indent=2)
 
     def delete_vacancies(self, user_id: str) -> None:
         """ Удаление вакансии по id """
