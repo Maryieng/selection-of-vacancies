@@ -19,7 +19,7 @@ class VacancyAPI(ABC):
 
 class VakancyParams:
     """ Параметры для поисков вакансий """
-    def __init__(self, vakancy_name: str, sorting: int, payment_from: int, no_agreement: int):
+    def __init__(self, vakancy_name: str, sorting: Any, payment_from: int, no_agreement: int):
         self.vakancy_name = vakancy_name
         self.sorting = sorting  # фильтр по дате или сумме publication_time /  salary_desc
         self.payment_from = payment_from  # сумма от
@@ -44,15 +44,15 @@ class VacancyManager(ABC):
         pass
 
     @abstractmethod
-    def __add__(self, other):
-        """ Добавление вакансий по одной """
+    def adding_data(self):
+        """ Добавление вакансий в существующий файл """
         pass
 
 
 class SuperJobAPI(VakancyParams, VacancyAPI):
     """ Класс для получения вакансий с сайта Superjob по критериям пользователя """
 
-    def __init__(self, vakancy_name: str, sorting: int, payment_from: int, no_agreement: int) -> None:
+    def __init__(self, vakancy_name: str, sorting: str, payment_from: int, no_agreement: int) -> None:
         """ Инициализация """
         super().__init__(vakancy_name, sorting, payment_from, no_agreement)
         self.headers = {'X-Api-App-Id': os.getenv('API_KEY')}
@@ -65,13 +65,14 @@ class SuperJobAPI(VakancyParams, VacancyAPI):
             response = requests.get(self.url, headers=self.headers,
                                     params={'keywords': self.vakancy_name, 'order_field': self.sorting,
                                             'payment_from': self.payment_from,
-                                            'no_agreement': self.no_agreement}).json()
+                                            'no_agreement': self.no_agreement,
+                                            'count': 100}).json()
             return response
         except Exception as e:
             print(f"Ошибка: {e}")
 
     def load_vacancy(self):
-        """Проходим циклом по словарю берем из словаря только нужные нам данные и записываем их в переменную 'vacancy_list_SJ' """
+        """ Цикл по словарюю берем из словаря только нужные нам данные и записываем их в переменную 'vacancies_in_SJ' """
         data = self.connect_get_vacancies()
         vacancies_in_SJ = []
         for vacancy in data['objects']:
@@ -93,7 +94,7 @@ class SuperJobAPI(VakancyParams, VacancyAPI):
 class HeadHunterAPI(VakancyParams, VacancyAPI):
     """ Класс для получения вакансий с сайта HeadHunter по критериям пользователя"""
 
-    def __init__(self, vakancy_name: str, sorting: int, payment_from: int, no_agreement: int) -> None:
+    def __init__(self, vakancy_name: str, sorting: str, payment_from: int, no_agreement: int) -> None:
         """ Инициализация """
         super().__init__(vakancy_name, sorting, payment_from, no_agreement)
         self.base_url = 'https://api.hh.ru/vacancies'
@@ -105,7 +106,8 @@ class HeadHunterAPI(VakancyParams, VacancyAPI):
                                      ' (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'}
             response = requests.get(self.base_url, headers=headers,
                                     params={'text': self.vakancy_name, 'order_by': self.sorting,
-                                            'salary': self.payment_from, 'only_with_salary': self.no_agreement}).json()
+                                            'salary': self.payment_from, 'only_with_salary': self.no_agreement,
+                                            'per_page': 100}).json()
             return response
         except Exception as e:
             print(f"Ошибка: {e}")
@@ -137,23 +139,25 @@ class ReadWriteFile(VacancyManager):
     def _save_vacancies(self) -> None:
         """ Запись списка вакансий в файл json """
         with open('Vacancies_for_you.json', 'w', encoding='utf-8') as file:
-            json.dump(self.data, file, ensure_ascii=False, indent=2)
+            if len(self.data) > 1:
+                json.dump(self.data, file, ensure_ascii=False, indent=2)
+            else:
+                info = 'Не найдено подходящих вакансий'
+                json.dump(info, file, ensure_ascii=False, indent=2)
+
 
     def delete_vacancies(self, user_id: str) -> None:
         """ Удаление вакансии по id """
-        obj = json.load(open("Vacancies_for_you.json"))
-        for elem in range(len(obj)):
-            if obj[elem]["id"] == user_id:
-                obj.pop(elem)
-                break
+        obj = json.load(open("Vacancies_for_you.json", encoding=('utf-8')))
+        new_list = [vacancy for vacancy in obj if vacancy.get('id') != user_id]
+        with open("Vacancies_for_you.json", 'w', encoding='utf-8') as file:
+            json.dump(new_list, file, ensure_ascii=False, indent=2)
 
-    def __add__(self, other: dict) -> None:
-        """ Добавление вакансии к списку в файле json """
+    def adding_data(self) -> None:
+        """ Добавление вакансий к списку в файле json """
         with open('Vacancies_for_you.json', 'a', encoding='utf-8') as file:
-            json.dump(other, file, ensure_ascii=False, indent=2)
-
-
-# api = HeadHunterAPI('няня', 'publication_time', 50000, 1)
-# new_class = ReadWriteFile(api.load_vacancy())
-# new_class._save_vacancies()
-# pprint(api.load_vacancy())
+            if len(self.data) > 1:
+                json.dump(self.data, file, ensure_ascii=False, indent=2)
+            else:
+                info = 'Не найдено подходящих вакансий'
+                json.dump(info, file, ensure_ascii=False, indent=2)
