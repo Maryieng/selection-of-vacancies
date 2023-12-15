@@ -1,3 +1,6 @@
+import json
+from pprint import pprint
+
 from src.getting_vacancies import SuperJobAPI, HeadHunterAPI, ReadWriteFile
 
 
@@ -58,6 +61,12 @@ def receiving_data_from_the_user():
         """).lower()
         if continuation_of_the_cycle == "нет":
             break
+    selecting_console_output = input("""Вывести вакансии в консоль? Да/Нет
+    """).lower()
+    if selecting_console_output == "да":
+        with open('Vacancies_for_you.json', 'r', encoding='utf-8') as file:
+            data = json.load(file)
+        pprint(data)
 
 
 receiving_data_from_the_user()
