@@ -1,7 +1,6 @@
 import json
 from abc import ABC, abstractmethod
 from datetime import datetime
-from pprint import pprint
 from typing import Any
 import os
 from dotenv import load_dotenv
@@ -75,20 +74,24 @@ class SuperJobAPI(VakancyParams, VacancyAPI):
         """ Цикл по словарюю берем из словаря только нужные нам данные и записываем их в переменную 'vacancies_in_SJ' """
         data = self.connect_get_vacancies()
         vacancies_in_SJ = []
-        for vacancy in data['objects']:
-            published_at = datetime.fromtimestamp(vacancy.get('date_published', ''))
-            super_job = {
-                'id': vacancy['id'],
-                'name': vacancy.get('profession', ''),
-                'solary_ot': vacancy.get('payment_from', '') if vacancy.get('payment_from') else None,
-                'solary_do': vacancy.get('payment_to') if vacancy.get('payment_to') else None,
-                'responsibility': vacancy.get('candidat').replace('\n', '').replace('•', '')
-                if vacancy.get('candidat') else None,
-                'data': published_at.strftime("%d.%m.%Y"),
-                'link': vacancy.get('link') if vacancy.get('link') else None
-            }
-            vacancies_in_SJ.append(super_job)
-        return vacancies_in_SJ
+        try:
+            for vacancy in data['objects']:
+                published_at = datetime.fromtimestamp(vacancy.get('date_published', ''))
+                super_job = {
+                    'id': vacancy['id'],
+                    'name': vacancy.get('profession', ''),
+                    'solary_ot': vacancy.get('payment_from', '') if vacancy.get('payment_from') else None,
+                    'solary_do': vacancy.get('payment_to') if vacancy.get('payment_to') else None,
+                    'responsibility': vacancy.get('candidat').replace('\n', '').replace('•', '')
+                    if vacancy.get('candidat') else None,
+                    'data': published_at.strftime("%d.%m.%Y"),
+                    'link': vacancy.get('link') if vacancy.get('link') else None
+                }
+                vacancies_in_SJ.append(super_job)
+            return vacancies_in_SJ
+        except Exception as e:
+            print(f"Ошибка: {e}")
+            return []
 
 
 class HeadHunterAPI(VakancyParams, VacancyAPI):
@@ -116,19 +119,22 @@ class HeadHunterAPI(VakancyParams, VacancyAPI):
         """ Создание списка вакансий с нужными данными """
         data = self.connect_get_vacancies()
         vacancies_in_HH = []
-        for vacancy in data.get('items', []):
-            published_at = datetime.strptime(vacancy['published_at'], "%Y-%m-%dT%H:%M:%S%z")
-            vacancy_info = {
-                'id': vacancy['id'],
-                'name': vacancy['name'],
-                'solary_ot': vacancy['salary']['from'] if vacancy.get('salary') else None,
-                'solary_do': vacancy['salary']['to'] if vacancy.get('salary') else None,
-                'responsibility': vacancy['snippet']['responsibility'],
-                'data': published_at.strftime("%d.%m.%Y"),
-                'link': vacancy.get('alternate_url') if vacancy.get('alternate_url') else None
-            }
-            vacancies_in_HH.append(vacancy_info)
-        return vacancies_in_HH
+        try:
+            for vacancy in data.get('items', []):
+                published_at = datetime.strptime(vacancy['published_at'], "%Y-%m-%dT%H:%M:%S%z")
+                vacancy_info = {
+                    'id': vacancy['id'],
+                    'name': vacancy['name'],
+                    'solary_ot': vacancy['salary']['from'] if vacancy.get('salary') else None,
+                    'solary_do': vacancy['salary']['to'] if vacancy.get('salary') else None,
+                    'responsibility': vacancy['snippet']['responsibility'],
+                    'data': published_at.strftime("%d.%m.%Y"),
+                    'link': vacancy.get('alternate_url') if vacancy.get('alternate_url') else None
+                }
+                vacancies_in_HH.append(vacancy_info)
+            return vacancies_in_HH
+        except Exception as e:
+            print(f"Ошибка: {e}")
 
 
 class ReadWriteFile(VacancyManager):
@@ -139,25 +145,24 @@ class ReadWriteFile(VacancyManager):
     def _save_vacancies(self) -> None:
         """ Запись списка вакансий в файл json """
         with open('Vacancies_for_you.json', 'w', encoding='utf-8') as file:
-            if len(self.data) > 1:
                 json.dump(self.data, file, ensure_ascii=False, indent=2)
-            else:
-                info = 'Не найдено подходящих вакансий'
-                json.dump(info, file, ensure_ascii=False, indent=2)
-
 
     def delete_vacancies(self, user_id: str) -> None:
         """ Удаление вакансии по id """
-        obj = json.load(open("Vacancies_for_you.json", encoding=('utf-8')))
-        new_list = [vacancy for vacancy in obj if vacancy.get('id') != user_id]
-        with open("Vacancies_for_you.json", 'w', encoding='utf-8') as file:
-            json.dump(new_list, file, ensure_ascii=False, indent=2)
+        try:
+            initial_data = json.load(open("Vacancies_for_you.json", encoding=('utf-8')))
+            new_list = [vacancy for vacancy in initial_data if vacancy.get('id') != user_id]
+            with open("Vacancies_for_you.json", 'w', encoding='utf-8') as file:
+                json.dump(new_list, file, ensure_ascii=False, indent=2)
+        except Exception as e:
+            print(f"Ошибка: {e}")
 
     def adding_data(self) -> None:
         """ Добавление вакансий к списку в файле json """
-        with open('Vacancies_for_you.json', 'a', encoding='utf-8') as file:
-            if len(self.data) > 1:
-                json.dump(self.data, file, ensure_ascii=False, indent=2)
-            else:
-                info = 'Не найдено подходящих вакансий'
-                json.dump(info, file, ensure_ascii=False, indent=2)
+        try:
+            initial_data = json.load(open("Vacancies_for_you.json", encoding=('utf-8')))
+            new_list = initial_data + self.data
+            with open("Vacancies_for_you.json", 'w', encoding='utf-8') as file:
+                json.dump(new_list, file, ensure_ascii=False, indent=2)
+        except Exception as e:
+            print(f"Ошибка: {e}")
