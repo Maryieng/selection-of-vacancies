@@ -1,13 +1,14 @@
 import json
 from pprint import pprint
 
-from src.getting_vacancies import SuperJobAPI, HeadHunterAPI, ReadWriteFile
+from src.getting_vacancies import HeadHunterAPI, ReadWriteFile, SuperJobAPI
 
 
-def receiving_data_from_the_user():
+def receiving_data_from_the_user() -> None:
+    """ Функция для взаимодействия с пользователем """
     while True:
         platforms = input("""Выберете цифру для поиска:
-        1 - HeadHunter 
+        1 - HeadHunter
         2 - SuperJob
         """)
         vakancy_name = input("""Укажите профессию
@@ -15,7 +16,7 @@ def receiving_data_from_the_user():
         payment_from = int(input("""Укажите минимальную желаемую сумму зарплаты
         """))
         no_agreement = int(input("""Нужно ли выводить вакансии без указания заработной платы (По договоренности)?
-        1 - Нет 
+        1 - Нет
         2 - Да
         """))
         sorting = input("""Укажите сортировку: Дата/Зарплата
@@ -32,13 +33,13 @@ def receiving_data_from_the_user():
                 sorting = 'date'
             else:
                 sorting = 'payment'
-            activation_class = SuperJobAPI(vakancy_name, sorting, payment_from, no_agreement)
+            activation_class = SuperJobAPI(vakancy_name, sorting, payment_from, no_agreement)  # type: ignore
 
         vacancy_data = activation_class.load_vacancy()
         activating_class_for_record = ReadWriteFile(vacancy_data)
 
         data_status = input("""Выберите действие:
-        1. Создать новый файл 
+        1. Создать новый файл
         2. Дополнить прежний (при условии уже выполненого ранее 1 пункта)
         """)
         if data_status == '1':
