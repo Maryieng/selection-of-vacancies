@@ -1,7 +1,9 @@
 import json
 from pprint import pprint
 
-from src.getting_vacancies import HeadHunterAPI, ReadWriteFile, SuperJobAPI
+from src.receiving_data import HeadHunterAPI, SuperJobAPI
+from src.work_with_vacancies import DataValidation
+from src.working_with_file import ReadWriteFile
 
 
 def receiving_data_from_the_user() -> None:
@@ -28,14 +30,19 @@ def receiving_data_from_the_user() -> None:
             else:
                 sorting = 'salary_desc'
             activation_class = HeadHunterAPI(vakancy_name, sorting, payment_from, no_agreement)
+            sending_request = activation_class.connect_get_vacancies()
+            creation_of_vacancies = DataValidation(sending_request)
+            vacancy_data = creation_of_vacancies.load_vacancy_hh()
         else:
             if sorting == "дата":
                 sorting = 'date'
             else:
                 sorting = 'payment'
             activation_class = SuperJobAPI(vakancy_name, sorting, payment_from, no_agreement)  # type: ignore
+            sending_request = activation_class.connect_get_vacancies()
+            creation_of_vacancies = DataValidation(sending_request)
+            vacancy_data = creation_of_vacancies.load_vacancy_sj()
 
-        vacancy_data = activation_class.load_vacancy()
         activating_class_for_record = ReadWriteFile(vacancy_data)
 
         data_status = input("""Выберите действие:
@@ -62,12 +69,12 @@ def receiving_data_from_the_user() -> None:
         """).lower()
         if continuation_of_the_cycle == "нет":
             break
-    selecting_console_output = input("""Вывести вакансии в консоль? Да/Нет
+    selecting_console_output = input("""Вывести топ-5 вакансии по заработной плате в консоль? Да/Нет
     """).lower()
     if selecting_console_output == "да":
         with open('Vacancies_for_you.json', 'r', encoding='utf-8') as file:
             data = json.load(file)
-        pprint(data)
+            pprint(DataValidation(data).get_top_vacancies(data, data))
 
 
 receiving_data_from_the_user()
