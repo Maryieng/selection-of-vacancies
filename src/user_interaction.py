@@ -74,7 +74,7 @@ def receiving_data_from_the_user() -> None:
     if selecting_console_output == "да":
         with open('Vacancies_for_you.json', 'r', encoding='utf-8') as file:
             data = json.load(file)
-            pprint(DataValidation(data).get_top_vacancies(data, data))
+            pprint(DataValidation(data).get_top_vacancies(data, data))  # type: ignore
 
 
 receiving_data_from_the_user()
