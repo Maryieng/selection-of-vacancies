@@ -3,7 +3,7 @@ from pprint import pprint
 
 from src.receiving_data import HeadHunterAPI, SuperJobAPI
 from src.work_with_vacancies import DataValidation
-from src.working_with_file import ReadWriteFile
+from src.working_with_json import ReadWriteFile
 
 
 def receiving_data_from_the_user() -> None:

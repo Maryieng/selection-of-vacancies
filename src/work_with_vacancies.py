@@ -51,6 +51,6 @@ class DataValidation:
             print(f"Ошибка: {e}")
 
     @staticmethod
-    def get_top_vacancies(self, vacancies: list) -> list:
+    def get_top_vacancies(vacancies: list) -> list:
         top_5_vacancies = sorted(vacancies, key=lambda x: x.get('salary', {}).get('from', 0), reverse=True)[:5]
         return top_5_vacancies
