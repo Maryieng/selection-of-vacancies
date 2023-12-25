@@ -9,6 +9,7 @@ readme = "README.md"
 python = "^3.12"
 requests = "^2.31.0"
 pandas = "^2.1.4"
+openpyxl = "^3.1.2"
 
 
 [tool.poetry.group.dev.dependencies]
