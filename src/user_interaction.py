@@ -3,7 +3,7 @@ from pprint import pprint
 
 from src.receiving_data import HeadHunterAPI, SuperJobAPI
 from src.work_with_vacancies import DataValidation
-from src.working_with_file import ReadWriteFile
+from src.working_with_json import ReadWriteFile
 
 
 def receiving_data_from_the_user() -> None:
@@ -74,7 +74,7 @@ def receiving_data_from_the_user() -> None:
     if selecting_console_output == "да":
         with open('Vacancies_for_you.json', 'r', encoding='utf-8') as file:
             data = json.load(file)
-            pprint(DataValidation(data).get_top_vacancies(data, data))
+            pprint(DataValidation(data).get_top_vacancies(data, data))  # type: ignore
 
 
 receiving_data_from_the_user()
