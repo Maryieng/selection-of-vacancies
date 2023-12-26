@@ -1,0 +1,2 @@
+[{'id': '90045793', 'name': 'Няня в частный детский сад', 'solary_ot': 40000, 'solary_do': None, 'responsibility': None, 'data': '22.12.2023', 'link': 'https://hh.ru/vacancy/90045793'}]
+[{'dfdd'}]
